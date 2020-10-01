@@ -23,6 +23,7 @@ parameter.
 | Parameter Name | Value                                                                           |
 |----------------|---------------------------------------------------------------------------------|
 | dataset        | Called once with object containing the full dataset metadata                    |
+| NC_GLOBALS     | Called once with an array of NC_GLOBAL attributes                               |
 | NC_GLOBAL      | Called once for each NC_GLOBAL attribute                                        |
 | variable       | Called once for each variable in the dataset                                    |
 | dimension      | Called once for each dimension in the dataset                                   |
@@ -48,7 +49,7 @@ Here's a simple filter which accepts only datasets from Irish Marine Institute:
 # Example Lowercase Rule
 All variable and dimension names to be lower case
 ```javascript
-(vardim)=>vardim.name === vardim.name.toLowerCase();
+(variable_or_dimension)=>variable_or_dimension.name === variable_or_dimension.name.toLowerCase();
 ```
 
 # Example Long Name Contains Short

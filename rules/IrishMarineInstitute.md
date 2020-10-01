@@ -12,3 +12,5 @@ Just the ones at marine.ie for now
 ```javascript
 (NC_GLOBAL)=>NC_GLOBAL.attributes.infoUrl && NC_GLOBAL.attributes.infoUrl.value.indexOf('data.marine.ie')>=0;
 ```
+
+# Where the organisation name is like `Marine Institute` it must read `Marine Isntitute, Ireland`

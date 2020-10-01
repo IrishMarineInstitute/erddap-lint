@@ -30,3 +30,6 @@ function(NC_GLOBAL){
 }
 
 ```
+
+# ISO 6801 Date Time Formats
+All dates/times in ERDDAP dataset titles or abstracts must follow ISO 6801 Date & Time format

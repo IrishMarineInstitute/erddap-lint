@@ -26,7 +26,7 @@ parameter.
 | NC_GLOBAL      | Called once for each NC_GLOBAL attribute                                        |
 | variable       | Called once for each variable in the dataset                                    |
 | dimension      | Called once for each dimension in the dataset                                   |
-| vardim         | Called once for each variable or dimension in the dataset                       |
+| variable_or_dimension         | Called once for each variable or dimension in the dataset                       |
 | station_name   | Called once for each variable or dimension named station_name or having an attribute named station_name, including NC_GLOBAL |
 | ioos_category  | Called once for each variable or dimension named ioos_category or having an attribute named ioos_category, including NC_GLOBAL |
 

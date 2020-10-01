@@ -7,3 +7,8 @@ Just the ones at marine.ie for now
 (dataset)=>dataset.url.indexOf("marine.ie/")>=0;
 ```
 
+# infoUrl must link to data.marine.ie
+
+```javascript
+(NC_GLOBAL)=>NC_GLOBAL.attributes.infoUrl && NC_GLOBAL.attributes.infoUrl.value.indexOf('data.marine.ie')>=0;
+```

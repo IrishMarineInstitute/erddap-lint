@@ -7,10 +7,26 @@ Just the ones at marine.ie for now
 (dataset)=>dataset.url.indexOf("marine.ie/")>=0;
 ```
 
-# infoUrl must link to data.marine.ie
+# Link to a data catalogue record
+The infoUrl must link to a catalogue record at data.marine.ie
 
 ```javascript
 (NC_GLOBAL)=>NC_GLOBAL.attributes.infoUrl && NC_GLOBAL.attributes.infoUrl.value.indexOf('data.marine.ie')>=0;
 ```
 
-# Where the organisation name is like `Marine Institute` it must read `Marine Institute, Ireland`
+# Institution is "Marine Institute, Ireland"
+
+Where the institution name is like `Marine Institute` it must read `Marine Institute, Ireland`
+```javascript
+function(NC_GLOBAL){
+  if(!NC_GLOBAL.attributes.institution){
+    return false; //needs to be here.
+  }
+  let institution = NC_GLOBAL.attributes.institution.value;
+  if(institution.toLowerCase.indexOf("marine institute")>=0){
+    return institution === "Marine Institute, Ireland";
+  }
+  return true;
+}
+
+```

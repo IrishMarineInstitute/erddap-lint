@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="generator" content=
+  "HTML Tidy for HTML5 for Linux version 5.2.0">
+  <title>ERDDAP Lint Tool</title>
+  <meta name="viewport" content=
+  "width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="css/tachyons.min.css">
+  <script src="js/erddap-lint.js"></script>
+</head>
+<body class="w-100 sans-serif">
+  <header class="w-100 pa3 ph5-ns bg-white">
+    <div class=
+    "flex flex-wrap flex-nowrap-ns items-center mw9 center w-100">
+      <div class="flex items-center w-100 w-50-ns mb2 mb0-ns">
+        <a href="/" class=
+        "nowrap dib f5 f4-ns fw6 mt0 mb1 link black-90" title=
+        "Home">
+        <h1>Welcome to the ERDDAP Lint Tool</h1>
+        <div class="dib">
+          <small class=
+          "nowrap f7 mt2 mt3-ns pr2 black-70">v0.0.1</small>
+        </div></a>
+      </div>
+    </div>
+  </header>
+  <main class="w-100 bt b--black-10 bg-white">
+    <section class="bg-black-0125 w-100">
+      <article class="pb4">
+        <header class=
+        "ph3 ph5-ns w-100 bg-transparent pv3 bb b--black-10 overflow-auto">
+          <div class="nowrap mw9 center">
+            <a title="Getting Started" href="#getting-started"
+            class=
+            "pv1-ns f6 fw6 dim link black-70 mr2 mr3-m mr4-l dib">Home</a> 
+            <a title="Home" href="#home"
+            class=
+            "pv1-ns f6 fw6 dim link black-70 mr1 mr3-m mr4-l dib">About</a>
+          </div>
+        </header>
+      </article>
+    <article class="pb4" id="about">
+        <p>dunno</p>
+    </article>
+    </section>
+  </main>
+  <footer class="pv4 ph3 ph5-m ph6-l mid-gray" id="about">
+  <small class="f6 db tc">© 2020 <b class="ttu">Irish Marine Institute</b></small>
+  <div class="tc mt3">
+    <a href="https://coastwatch.pfeg.noaa.gov/erddap/index.html" title="Language" class="f6 dib ph2 link mid-gray dim">ERDDAP</a>
+    <a href="https://www.marine.ie/"    title="Terms" class="f6 dib ph2 link mid-gray dim">Irish Marine Institute</a>
+    <a href="https://github.com/IrishMarineInstitute/erddap-lint"  title="Fork Me" class="f6 dib ph2 link mid-gray dim">ERDDAP-Lint</a>
+  </div>
+</footer>
+<script>
+  let t = new Date().getTime();
+  fetch("rules/").then(r=>r.text()).then(html=>{
+    let el = document.createElement("div");
+    el.innerHTML = html;
+    let ruleUrls = Array.prototype.map.call(el.querySelectorAll("A"), 
+        (e)=> e.getAttribute('href')).map(url=>new URL(`rules/${url}?${t}`,document.baseURI).href);
+    let linter = new ErddapLint();
+    linter.fetchRules(ruleUrls).then(()=>{
+      linter.fetchDataset("https://erddap.marine.ie/erddap/info/ais_met_hydro/index.json").then(dataset=>{
+        linter.applyRules(dataset);
+      });
+    });
+  });
+  
+</script>
+</body>
+</html>

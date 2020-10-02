@@ -56,7 +56,7 @@
 </footer>
 <script>
   let t = new Date().getTime();
-  fetch("rules/").then(r=>r.text()).then(html=>{
+  fetch("rules/index.html").then(r=>r.text()).then(html=>{
     let el = document.createElement("div");
     el.innerHTML = html;
     let ruleUrls = Array.prototype.map.call(el.querySelectorAll("A"), 

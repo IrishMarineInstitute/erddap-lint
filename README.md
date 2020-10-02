@@ -6,4 +6,4 @@ This project contains rules and a simple static web application for running some
 This is a new project; you're welcome to follow along but things may change suddenly and quickly. (We'll remove this statement when things become more stable!)
 
 # The Rules
-To add your own rules, see [How To Write Rules](WritingRules.md), then add your rules into the rules folder.
+To add your own rules, see [How To Write Rules](WritingRules.md), then add your rules file into the [rules](rules/) folder, and list it into [rules/index.html](rules/index.html).

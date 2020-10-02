@@ -9,14 +9,14 @@ Just the ones at marine.ie for now
 (dataset)=>dataset.url.indexOf("marine.ie/")>=0;
 ```
 
-# Link to a data catalogue record
+# Must Link to a data catalogue record, but doesn't
 The infoUrl must link to a catalogue record at data.marine.ie
 
 ```javascript
 (NC_GLOBALS)=>NC_GLOBALS.infoUrl && NC_GLOBALS.infoUrl.value.indexOf('data.marine.ie')>=0;
 ```
 
-# Institution is "Marine Institute, Ireland"
+# Institution should be "Marine Institute, Ireland", but isn't
 
 Where the institution name is like `Marine Institute` it must read `Marine Institute, Ireland`
 ```javascript

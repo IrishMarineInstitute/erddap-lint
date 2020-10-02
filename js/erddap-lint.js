@@ -234,8 +234,8 @@
                 .then(ruleSet=>this.ruleSets.push(ruleSet)))
         ).then(()=>this)
     }
-    ErddapLint.prototype.applyRules = function(dataset){
-        let context = this.context;
+    ErddapLint.prototype.applyRules = function(dataset,context){
+        context = context || this.context;
         this.ruleSets.filter(ruleSet=>ruleSet.accepts(context,dataset)).map(ruleSet=>ruleSet.apply(context,dataset));
     }
     ErddapLint.prototype.fetchDataset = function(datasetUrl){

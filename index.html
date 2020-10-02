@@ -42,7 +42,30 @@
         </header>
       </article>
     <article class="pb4" id="about">
-        <p>dunno</p>
+      <div class="nowrap mw7 center">
+  <div class="measure">
+    <label for="dataset-url" class="f6 b db mb2">Dataset metadata URL</label>
+    <input id="dataset-url" class="input-reset ba b--black-20 pa2 mb2 db w-100" type="text"
+    aria-describedby="dataset-url-desc" value="https://erddap.marine.ie/erddap/info/ais_met_hydro/index.json">
+    <small id="dataset-url-desc" class="f6 black-60 db mb2">URL to the ERDDAP dataset metadata page.</small>
+  </div>
+
+  <button id="validate-button" class="f6 link dim br3 ph3 pv2 mb2 dib black bg-mid-green">Validate</button>
+</div>
+<pre id="report">
+
+
+
+
+
+
+
+
+
+
+
+
+</pre>
     </article>
     </section>
   </main>
@@ -63,8 +86,16 @@
         (e)=> e.getAttribute('href')).map(url=>new URL(`rules/${url}?${t}`,document.baseURI).href);
     let linter = new ErddapLint();
     linter.fetchRules(ruleUrls).then(()=>{
-      linter.fetchDataset("https://erddap.marine.ie/erddap/info/ais_met_hydro/index.json").then(dataset=>{
-        linter.applyRules(dataset);
+      let report = document.getElementById("report");
+      document.getElementById("validate-button").addEventListener("click",()=>{
+        let datasetURL = document.getElementById("dataset-url").value;
+        linter.fetchDataset(datasetURL).then(dataset=>{
+          report.innerText = "";
+          let context = {
+            log: (text)=>report.innerText = report.innerText+text+"\n"
+          }
+          linter.applyRules(dataset,context);
+        });
       });
     });
   });

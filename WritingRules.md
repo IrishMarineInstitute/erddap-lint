@@ -15,7 +15,8 @@ fenced javascript block may be written by different people.
 
 The function receives a dataset or a variable, a dimension, attribute, for which it can return 
 trueish if the dataset passes validation, and falsish if it fails. (A falsish value is false, zero,
-null or undefined. A truish value is anything not falsish).
+null or undefined. A truish value is anything not falsish). Alternatively, the function may use
+[chai.assert](https://www.chaijs.com/guide/styles/#assert) to fulfill the test.
 
 Here's something neat: The parameter passed to the function is determined by the name of the function
 parameter.
@@ -58,5 +59,14 @@ The short name must be included in the long_name
 (long_name)=>{
   let variable = long_name
   return variable.attributes.long_name.value.indexOf(variable.name) >=0;
+}
+```
+
+# Example Long Name Contains Short using chai.assert
+The short name must be included in the long_name
+```javascript
+(long_name)=>{
+  let variable = long_name
+  chai.assert(variable.attributes.long_name.value.indexOf(variable.name) >=0);
 }
 ```

@@ -43,30 +43,23 @@
       </article>
     <article class="pb4" id="about">
       <div class="nowrap mw7 center">
-  <div class="measure">
-    <label for="dataset-url" class="f6 b db mb2">Dataset metadata URL</label>
-    <input id="dataset-url" class="input-reset ba b--black-20 pa2 mb2 db w-100" type="text"
-    aria-describedby="dataset-url-desc" value="https://erddap.marine.ie/erddap/info/ais_met_hydro/index.json">
-    <small id="dataset-url-desc" class="f6 black-60 db mb2">URL to the ERDDAP dataset metadata page.</small>
-  </div>
-
-  <button id="validate-button" class="f6 link dim br3 ph3 pv2 mb2 dib black bg-mid-green">Validate</button>
-</div>
-<pre id="report">
-
-
-
-
-
-
-
-
-
-
-
-
-</pre>
-    </article>
+        <div class="measure">
+          <label for="dataset-url" class="f6 b db mb2">Dataset metadata URL</label>
+          <input id="dataset-url" class="input-reset ba b--black-20 pa2 mb2 db w-100" type="text"
+          aria-describedby="dataset-url-desc" value="https://erddap.marine.ie/erddap/info/ais_met_hydro/index.json">
+          <small id="dataset-url-desc" class="f6 black-60 db mb2">URL to the ERDDAP dataset metadata page.</small>
+        </div>
+        <button id="validate-dataset-button" class="f6 link dim br3 ph3 pv2 mb2 dib black bg-mid-green">Validate Dataset</button>
+      </div>
+      <div class="nowrap mw7 center">
+        <div class="measure">
+          <label for="erddap-url" class="f6 b db mb2">ERDDAP URL</label>
+          <input id="erddap-url" class="input-reset ba b--black-20 pa2 mb2 db w-100" type="text"
+          aria-describedby="erddap-url-desc" value="https://erddap.marine.ie/erddap">
+          <small id="erddap-url-desc" class="f6 black-60 db mb2">URL to ERDDAP.</small>
+        </div>
+        <button id="validate-erddap-button" class="f6 link dim br3 ph3 pv2 mb2 dib black bg-mid-green">Validate all Tabledap Datasets</button>
+      </div>    </article>
     </section>
   </main>
   <footer class="pv4 ph3 ph5-m ph6-l mid-gray" id="about">
@@ -78,28 +71,15 @@
   </div>
 </footer>
 <script>
-  let t = new Date().getTime();
-  fetch("rules/index.html").then(r=>r.text()).then(html=>{
-    let el = document.createElement("div");
-    el.innerHTML = html;
-    let ruleUrls = Array.prototype.map.call(el.querySelectorAll("A"), 
-        (e)=> e.getAttribute('href')).map(url=>new URL(`rules/${url}?${t}`,document.baseURI).href);
-    let linter = new ErddapLint();
-    linter.fetchRules(ruleUrls).then(()=>{
-      let report = document.getElementById("report");
-      document.getElementById("validate-button").addEventListener("click",()=>{
-        let datasetURL = document.getElementById("dataset-url").value;
-        linter.fetchDataset(datasetURL).then(dataset=>{
-          report.innerText = "";
-          let context = {
-            log: (text)=>report.innerText = report.innerText+text+"\n"
-          }
-          linter.applyRules(dataset,context);
-        });
-      });
-    });
+
+  document.getElementById("validate-dataset-button").addEventListener("click",()=>{
+    let datasetURL = document.getElementById("dataset-url").value;
+    window.location.href = `../runtests.html#dataset=${datasetURL}`;
   });
-  
+  document.getElementById("validate-erddap-button").addEventListener("click",()=>{
+    let erddapURL = document.getElementById("erddap-url").value;
+    window.location.href = `../runtests.html#erddap=${erddapURL}`;
+  });  
 </script>
 </body>
 </html>

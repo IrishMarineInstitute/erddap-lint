@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>ERDDAP-lint tests</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="https://unpkg.com/mocha/mocha.css" />
+      <script src="js/erddap-lint.js"></script>
+  </head>
+  <body>
+    <div id="mocha"></div>
+
+    <script src="https://unpkg.com/chai/chai.js"></script>
+    <script src="https://unpkg.com/mocha/mocha.js"></script>
+
+    <script class="mocha-init">
+      mocha.setup('bdd');
+      mocha.growl(); // <-- Enables web notifications
+    </script>
+<script>
+    let getErddapLint = function(){
+      let t = new Date().getTime();
+      return fetch("rules/index.html").then(r=>r.text()).then(html=>{
+        let el = document.createElement("div");
+        el.innerHTML = html;
+        let ruleUrls = Array.prototype.map.call(el.querySelectorAll("A"), 
+            (e)=> e.getAttribute('href')).map(url=>new URL(`rules/${url}?${t}`,document.baseURI).href);
+        let lint = new ErddapLint();
+        return lint.fetchRules(ruleUrls).then(_=>lint);
+      });
+    }
+
+    let params = window.location.hash.substring(1).split('&').reduce((h,hk) => { 
+      let t = hk.split('='); 
+        h[t[0]] = t[1];
+        return h;
+    },{});
+    if(params.dataset){
+      getErddapLint().then(lint=>{
+        lint.prepareMochaTestsForDataset(params.dataset)
+          .then(e=>{
+            mocha.run();
+          })
+        });
+    }else if(params.erddap){
+      getErddapLint().then(lint=>{
+              lint.prepareMochaTestsForErddap(params.erddap)
+                .then(e=>{
+                  mocha.run();
+                })
+              });
+    }else{
+        runTests(["https://erddap.marine.ie/erddap/info/ais_met_hydro/index.json"]);
+    }
+
+</script>
+    <script class="mocha-exec">
+     // mocha.run();
+    </script>
+  </body>
+</html>

@@ -15,7 +15,8 @@
 
     <script class="mocha-init">
       mocha.setup('bdd');
-      mocha.growl(); // <-- Enables web notifications
+      //mocha.growl(); // <-- Enables web notifications
+      mocha._reporter.prototype.testURL = function(test){return `#${window.location.hash.substring(1)}`};
     </script>
 <script>
     let getErddapLint = function(){

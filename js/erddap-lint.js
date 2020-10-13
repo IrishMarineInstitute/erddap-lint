@@ -316,6 +316,7 @@
                                 log: (text) => messages.push(text)
                             }
                             it(rule.title, function() {
+                                this.test.body = `# ${rule.title}\n\n${rule.docs}\n\n\`\`\`\n${rule.code}\n\`\`\`\n`;
                                 if (rule.accepts(context, dataset)) {
                                     chai.assert(true);
                                 } else {

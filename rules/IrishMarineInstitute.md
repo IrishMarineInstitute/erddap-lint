@@ -88,7 +88,7 @@ All date/times in the following Erddap global attributes must follow the ISO 860
 
 ```
 
-# standard_name attribute is in the master vocabulary on the NVS, and not deprecated
+# All standard_name attributes are in the master vocabulary on the NVS, and not deprecated
 Query for all non-deprecated terms in the CF vocabulary from the NVS SPARQL endpoint (http://vocab.nerc.ac.uk/sparql):
 
 Timeout: 45000

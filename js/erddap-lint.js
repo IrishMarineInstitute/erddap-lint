@@ -106,13 +106,17 @@
         }
         let args = $args(this.fn);
         if (args.length !== 1) {
-            throw new Error("Rule function must take exactly one parameter");
+            if (args.length === 2 && args[1] === "done") {
+                // okay
+            } else {
+                throw new Error("Rule function must take exactly one parameter, or two if second parameter is 'done'");
+            }
         }
         this.args = args;
     }
-    CodeRule.prototype.accepts = function(context, parameter) {
+    CodeRule.prototype.accepts = function(context, parameter, done) {
         try {
-            return this.fn(parameter);
+            return this.fn(parameter, done);
         } catch (e) {
             if (e instanceof chai.AssertionError) {
                 delete e.stack;
@@ -125,6 +129,8 @@
     const Rule = function(reference, line_no, markdown, context) {
         let lines = markdown.split("\n")
         this.title = lines[0].replace('#', '').trim();
+        this.timeout = false;
+        let re_timeout = /^\s*timeout:\s*(\d+)\s*$/i;
         let docs = [],
             code = [],
             incode = false;
@@ -146,6 +152,10 @@
                 code.push(line);
             } else {
                 docs.push(line);
+                if(line.match(re_timeout)){
+                    this.timeout = parseInt(line.match(re_timeout)[1]);
+                    console.log("timeout",this.timeout);
+                }
             }
         }
         this.docs = docs.join("\n");
@@ -157,31 +167,52 @@
             } catch (e) {
                 let msg = e.toString().split("\n");
                 context.log(`ERROR: invalid function for rule ${this.title}\n       ${msg}\n       ${reference} line ${incode}`)
+                this.codeRule = new CodeRule(this.title, "(dataset)=>chai.assert.fail('the function is invalid')");
             }
         }
 
     }
 
-    Rule.prototype.accepts = function(context, dataset) {
-        let variable_accepts = (variables) => {
+    Rule.prototype.accepts = function(context, dataset, mochaDone) {
+        let promises = [];
+        let utdone = function(lastOne){
+            if(!mochaDone) return undefined;
+            let done = undefined;
+            let promise = new Promise((resolve)=>{done=resolve});
+            promises.push(promise);
+            if(lastOne){
+                setTimeout(()=>{Promise.all(promises).then(results=>{
+                    let fails = results.filter(result=>result).map(e=>`${e}`);
+                    if(fails.length){
+                        let err = new chai.AssertionError(fails.join("\n                "));
+                        delete err.stack;
+                        mochaDone(err);
+                    }else{
+                        mochaDone();
+                    }
+                })},0);
+            }
+            return done;
+        }
+        let variable_accepts = (variables,more) => {
             return variables.map(v => {
-                if (this.codeRule.accepts(context, v)) {
+                if (this.codeRule.accepts(context, v, utdone(more?false:true))) {
                     return true;
                 }
                 context.log(`${this.title} rejected for variable ${v.name}`)
             }).reduce((accepted, accepts) => accepted && accepts, true)
         }
-        let dimension_accepts = (dimensions) => {
+        let dimension_accepts = (dimensions,more) => {
             return dimensions.map(d => {
-                if (this.codeRule.accepts(context, d)) {
+                if (this.codeRule.accepts(context, d, utdone(more?false:true))) {
                     return true;
                 }
                 context.log(`${this.title} rejected for dimension ${d.name}`)
             }).reduce((accepted, accepts) => accepted && accepts, true)
         }
-        let ncglobal_accepts = () => {
+        let ncglobal_accepts = (more) => {
             return Object.entries(dataset.NC_GLOBALS.attributes).map(([k, v]) => v).map(a => {
-                if (this.codeRule.accepts(context, a)) {
+                if (this.codeRule.accepts(context, a, utdone(more?false:true))) {
                     return true;
                 }
                 context.log(`${this.title} rejected for NC_GLOBAL attribute ${a.name}`)
@@ -191,10 +222,10 @@
         switch (parameter) {
             case 'dataset':
                 {
-                    return this.codeRule.accepts(context, dataset);
+                    return this.codeRule.accepts(context, dataset, utdone(true));
                 }
             case 'NC_GLOBALS':
-                return this.codeRule.accepts(context, dataset.NC_GLOBALS);
+                return this.codeRule.accepts(context, dataset.NC_GLOBALS, utdone(true));
             case 'NC_GLOBAL':
                 return ncglobal_accepts();
             case 'variable':
@@ -202,7 +233,7 @@
             case 'dimension':
                 return dimension_accepts(dataset.dimensions);
             case 'variable_or_dimension':
-                let a = variable_accepts(dataset.variables);
+                let a = variable_accepts(dataset.variables,true);
                 let b = dimension_accepts(dataset.dimensions);
                 return a && b;
             default:
@@ -213,17 +244,18 @@
          or having an attribute named ${parameter}, including NC_GLOBAL
          */
         let results = [];
-        if (dataset.NC_GLOBALS.attributes.filter(a => a.name === parameter).length) {
-            let accepts = this.codeRule.accepts(context, dataset.NC_GLOBALS);
+        if (Object.entries(dataset.NC_GLOBALS.attributes).filter(([key,a]) => a.name === parameter).length) {
+            let accepts = this.codeRule.accepts(context, dataset.NC_GLOBALS,utdone(true));
             if (!accepts) {
                 context.log("rejected for NC_GLOBALS")
             }
             results.push(accepts);
         }
-        let variables = dataset.variables.filter(v => v.name === parameter || v.attributes.filter(a => a.name === parameter));
-        results.push(variable_accepts(variables));
-        let dimensions = dataset.variables.filter(d => d.name === parameter || d.attributes.filter(a => a.name === parameter));
-        results.push(dimension_accepts(dimensions));
+        let variables = dataset.variables.filter(v => v.name === parameter || Object.entries(v.attributes).filter(([key,a])  => a.name === parameter).length);
+        results.push(variable_accepts(variables,true));
+        let dimensions = dataset.dimensions.filter(d => d.name === parameter || Object.entries(d.attributes).filter(([key,a])  => a.name === parameter).length);
+        results.push(dimension_accepts(dimensions,true));
+        utdone(true)();
         return results.reduce((accepted, accepts) => accepted && accepts, true);
     }
     const fetcher = new JSONPfetcher();
@@ -233,6 +265,9 @@
         }
         this.ruleSets = [];
     }
+    const memo = {
+        foo: "bar"
+    };
     ErddapLint.prototype.fetchRules = function(urls) {
         return Promise.all(urls.map(
             url => fetch(url)
@@ -315,19 +350,29 @@
                             let context = {
                                 log: (text) => messages.push(text)
                             }
-                            it(rule.title, function() {
-                                this.test.body = `# ${rule.title}\n\n${rule.docs}\n\n\`\`\`\n${rule.code}\n\`\`\`\n`;
-                                if (rule.accepts(context, dataset)) {
-                                    chai.assert(true);
-                                } else {
-                                    try {
-                                        chai.assert.fail(`${rule.title}\n${messages.join("\n")}`)
-                                    } catch (e) {
-                                        delete e.stack;
-                                        throw e;
+                            if (rule.codeRule.args.length == 2) {
+                                it(rule.title, function(done) {
+                                    this.test.body = `# ${rule.title}\n\n${rule.docs}\n\n\`\`\`\n${rule.code}\n\`\`\`\n`;
+                                    if(rule.timeout){
+                                        this.timeout(rule.timeout);
                                     }
-                                }
-                            });
+                                    rule.accepts(context, dataset, done);
+                                });
+                            } else {
+                                it(rule.title, function() {
+                                    this.test.body = `# ${rule.title}\n\n${rule.docs}\n\n\`\`\`\n${rule.code}\n\`\`\`\n`;
+                                    if (rule.accepts(context, dataset)) {
+                                        chai.assert(true);
+                                    } else {
+                                        try {
+                                            chai.assert.fail(`${rule.title}\n${messages.join("\n")}`)
+                                        } catch (e) {
+                                            delete e.stack;
+                                            throw e;
+                                        }
+                                    }
+                                });
+                            }
                         });
                     });
                 })
@@ -336,19 +381,19 @@
         });
     }
 
-    ErddapLint.prototype.prepareMochaTestsForErddap =function(erddap) {
-        let searchURL = erddap+"/search/index.json?page=1&itemsPerPage=1000&searchFor=tabledap";
-        return fetcher.fetch(searchURL).then(data=>{
+    ErddapLint.prototype.prepareMochaTestsForErddap = function(erddap) {
+        let searchURL = erddap + "/search/index.json?page=1&itemsPerPage=1000&searchFor=tabledap";
+        return fetcher.fetch(searchURL).then(data => {
             let infocol = data.table.columnNames.indexOf("Info");
-            let urls = data.table.rows.map(x=>x[infocol]);
-            return new Promise((resolve,reject)=>{
-                let prepareNextUrl = ()=>{
+            let urls = data.table.rows.map(x => x[infocol]);
+            return new Promise((resolve, reject) => {
+                let prepareNextUrl = () => {
                     let url = urls.shift();
-                    if(url){
-                        this.prepareMochaTestsForDataset(url).then(_=>{
+                    if (url) {
+                        this.prepareMochaTestsForDataset(url).then(_ => {
                             prepareNextUrl();
                         });
-                    }else{
+                    } else {
                         resolve(true);
                     }
                 }

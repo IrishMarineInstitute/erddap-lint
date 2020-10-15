@@ -68,7 +68,7 @@ All date/times in the following Erddap global attributes must follow the ISO 860
 - time_coverage_start
 - time_coverage_end
 
-```
+```javascript
 (NC_GLOBALS)=>{
     let valid_iso_8601_pattern = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/
        let messages = [];
@@ -85,12 +85,18 @@ All date/times in the following Erddap global attributes must follow the ISO 860
     }
     return true;
 }
+
 ```
 
 # When standard_name attribute is populated the value is not deprecated in the master vocabulary on the NVS
 Query for all non-deprecated terms in the CF vocabulary from the NVS SPARQL endpoint (http://vocab.nerc.ac.uk/sparql):
 
-"""PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+Timeout: 45000
+
+```javascript
+(standard_name,done)=>{
+    let variable = standard_name;
+    let sparql = `PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
 PREFIX owl: <http://www.w3.org/2002/07/owl#>
 PREFIX dct: <http://purl.org/dc/terms/>
 select distinct ?vocab ?preflabel ?deprecated
@@ -106,10 +112,35 @@ where {
 FILTER(CONTAINS(str(?a),"http://vocab.nerc.ac.uk/collection/P07/current/") && ?deprecated = "false") .
 BIND(REPLACE(REPLACE(str(?a),"http://vocab.nerc.ac.uk/collection/","","i"),"/current/","","i") AS ?vocab) .
 BIND(REPLACE(str(?c),CONCAT("SDN:",?vocab,"::"),"","i") AS ?codval) .
-}"""
+}`
+    let sparqlurl = `http://vocab.nerc.ac.uk/sparql/sparql?output=csv&force-accept=text%2Fplain&query=${encodeURIComponent(sparql)}`;
+    //memoize the query result so we only run it once.
+    memo.fetch_standard_names = memo.fetch_standard_names || fetch(sparqlurl).then(x=>x.text()).then(text=>{
+        let lines = text.split("\n");
+        lines.shift;
+        return [lines.map(line=>line.split(",")[1]),lines.map(line=>line.split(",")[2])];
+    });
 
-As a URL returing JSON:
-http://vocab.nerc.ac.uk/sparql/sparql?query=PREFIX+skos%3A+%3Chttp%3A%2F%2Fwww.w3.org%2F2004%2F02%2Fskos%2Fcore%23%3E%0D%0APREFIX+owl%3A+%3Chttp%3A%2F%2Fwww.w3.org%2F2002%2F07%2Fowl%23%3E%0D%0APREFIX+dct%3A+%3Chttp%3A%2F%2Fpurl.org%2Fdc%2Fterms%2F%3E%0D%0A%0D%0Aselect+distinct+%3Fvocab+%3Fpreflabel+%3Fdeprecated%0D%0Awhere+%7B%0D%0A%3Fa+skos%3Amember+%3Furl+.%0D%0A%3Furl+skos%3AprefLabel+%3Fpreflabel+.%0D%0A%3Furl+skos%3AaltLabel+%3Faltlabel+.%0D%0A%3Furl+dct%3Adate+%3Fpublished+.%0D%0A%3Furl+owl%3AversionInfo+%3Fversion+.%0D%0A%3Furl+skos%3Anotation+%3Fc+.%0D%0A%3Furl+skos%3Adefinition+%3Fdefinition+.%0D%0A%3Furl+owl%3Adeprecated+%3Fdeprecated+.%0D%0AFILTER%28CONTAINS%28str%28%3Fa%29%2C%22http%3A%2F%2Fvocab.nerc.ac.uk%2Fcollection%2FP07%2Fcurrent%2F%22%29+%26%26+%3Fdeprecated+%3D+%22true%22%29+.%0D%0ABIND%28REPLACE%28REPLACE%28str%28%3Fa%29%2C%22http%3A%2F%2Fvocab.nerc.ac.uk%2Fcollection%2F%22%2C%22%22%2C%22i%22%29%2C%22%2Fcurrent%2F%22%2C%22%22%2C%22i%22%29+AS+%3Fvocab%29+.%0D%0ABIND%28REPLACE%28str%28%3Fc%29%2CCONCAT%28%22SDN%3A%22%2C%3Fvocab%2C%22%3A%3A%22%29%2C%22%22%2C%22i%22%29+AS+%3Fcodval%29+.%0D%0A%7D&output=json&stylesheet=
+    memo.fetch_standard_names.then(([standard_names,deprecates])=>{
+        if(variable && variable.attributes && variable.attributes.standard_name){
+            let standard_name = variable.attributes.standard_name.value;
+            let i = standard_names.indexOf(standard_name)
+           if(i>=0){
+                if(deprecates[i]==="true"){
+                    done(`${variable.name}.standard_name "${standard_name}" is marked deprecated in the NVS`)
+                }else{
+                    done();
+                }
+            }else{
+                done(`${variable.name}.standard_name "${standard_name}" is not in the NVS `)
+            }
+        }else{
+            console.log(variable);
+            done();
+        }
+    });
+}
+```
 
 # When the standard_name attibute is deprecated in the master vocabulary on the NVS then report the replacement standard_name term
 Query for all deprecated terms and replacements in the CF vocabulary from the NVS SPARQL endpoint (http://vocab.nerc.ac.uk/sparql):
@@ -129,7 +160,3 @@ where {
     BIND(REPLACE(str(?p),CONCAT("SDN:",?vocab,"::"),"","i") AS ?prpreflabel) .
     BIND(REPLACE(str(?o),CONCAT("SDN:",?vocab,"::"),"","i") AS ?obpreflabel) .
     }
-
-As a URL returing JSON:
-http://vocab.nerc.ac.uk/sparql/sparql?query=PREFIX+dct%3A+%3Chttp%3A%2F%2Fpurl.org%2Fdc%2Fterms%2F%3E%0D%0APREFIX+skos%3A+%3Chttp%3A%2F%2Fwww.w3.org%2F2004%2F02%2Fskos%2Fcore%23%3E%0D%0APREFIX+owl%3A+%3Chttp%3A%2F%2Fwww.w3.org%2F2002%2F07%2Fowl%23%3E%0D%0A%0D%0Aselect+%3Fvocab+%3Fprpreflabel+%3Fobpreflabel%0D%0Awhere+%7B%0D%0A++++%3Fb+%3Chttp%3A%2F%2Fpurl.org%2Fdc%2Fterms%2FisReplacedBy%3E+%3Fc+.%0D%0A++++%3Fa+skos%3Amember+%3Fb+.%0D%0A++++%3Fa+skos%3Amember+%3Fc+.%0D%0A++++%3Fb+skos%3AprefLabel+%3Fp+.%0D%0A++++%3Fc+skos%3AprefLabel+%3Fo+.%0D%0A++++FILTER%28CONTAINS%28str%28%3Fa%29%2C%22http%3A%2F%2Fvocab.nerc.ac.uk%2Fcollection%2FP07%2Fcurrent%2F%22%29%29+.%0D%0A++++BIND%28REPLACE%28REPLACE%28str%28%3Fa%29%2C%22http%3A%2F%2Fvocab.nerc.ac.uk%2Fcollection%2F%22%2C%22%22%2C%22i%22%29%2C%22%2Fcurrent%2F%22%2C%22%22%2C%22i%22%29+AS+%3Fvocab%29+.%0D%0A++++BIND%28REPLACE%28str%28%3Fp%29%2CCONCAT%28%22SDN%3A%22%2C%3Fvocab%2C%22%3A%3A%22%29%2C%22%22%2C%22i%22%29+AS+%3Fprpreflabel%29+.%0D%0A++++BIND%28REPLACE%28str%28%3Fo%29%2CCONCAT%28%22SDN%3A%22%2C%3Fvocab%2C%22%3A%3A%22%29%2C%22%22%2C%22i%22%29+AS+%3Fobpreflabel%29+.%0D%0A++++%7D&output=json&stylesheet=
-

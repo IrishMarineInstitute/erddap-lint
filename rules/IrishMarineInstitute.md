@@ -127,7 +127,7 @@ where {
     FILTER(CONTAINS(str(?a),"http://vocab.nerc.ac.uk/collection/P07/current/")) .
     BIND(REPLACE(REPLACE(str(?a),"http://vocab.nerc.ac.uk/collection/","","i"),"/current/","","i") AS ?vocab) .
 }`;
-    let url = "http://vocab.nerc.ac.uk/sparql/sparql?output=csv&force-accept=text%2Fplain"
+    let url = "https://vocab.nerc.ac.uk/sparql/sparql?output=csv&force-accept=text%2Fplain"
     let sparqlurl = `${url}&query=${encodeURIComponent(standard_names_sparql)}`;
     //memoize the query result so we only run it once.
     memo.fetch_standard_names = memo.fetch_standard_names || fetch(sparqlurl).then(x=>x.text()).then(text=>{

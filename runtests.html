@@ -24,7 +24,7 @@
         h[t[0]] = t[1];
         return h;
     },{});
-    let rules = params.rules && params.rules.split("|");
+    let rules = (params.rules && params.rules.split("|"))||[];
 
     let getErddapLint = function(){
       let t = new Date().getTime();

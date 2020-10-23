@@ -381,8 +381,9 @@
         });
     }
 
-    ErddapLint.prototype.prepareMochaTestsForErddap = function(erddap) {
-        let searchURL = erddap + "/search/index.json?page=1&itemsPerPage=1000&searchFor=tabledap";
+    ErddapLint.prototype.prepareMochaTestsForErddap = function(erddap,statuscb) {
+        let searchURL = erddap + "/search/index.json?page=1&itemsPerPage=1000&searchFor=latitude";
+        statuscb && setTimeout(()=>statuscb('searching for datasets'),0)
         return fetcher.fetch(searchURL).then(data => {
             let infocol = data.table.columnNames.indexOf("Info");
             let urls = data.table.rows.map(x => x[infocol]);
@@ -390,10 +391,12 @@
                 let prepareNextUrl = () => {
                     let url = urls.shift();
                     if (url) {
+                        statuscb && setTimeout(()=>statuscb(`fetching ${url}`),0)
                         this.prepareMochaTestsForDataset(url).then(_ => {
                             prepareNextUrl();
                         });
                     } else {
+                        statuscb && setTimeout(()=>statuscb("ready"),0)
                         resolve(true);
                     }
                 }

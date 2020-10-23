@@ -34,6 +34,25 @@ parameter.
 
 (We will provide an editor that can be used to develop a rule set).
 
+# done Parameter
+
+For things that take time, a function may contain a second parameter, `done` which is a callback.
+In this case the return parameter of the function is ignored, and the `done()` function must be invoked
+at the end of processing. Include a reason parameter when calling `done()`, if the test result was negative.
+
+
+# Timeout
+For slow operations, especially those which have a `done` parameter, specify a timeout, in seconds.
+
+Timeout: 5
+
+# The memo
+
+Your function has access to a `memo` object, which is a dictionary shared between calls. This can be useful
+for storing promises (eg fetch requests), so that the result can be used by all runs of the test rather than
+performing the operation many times. This is mostly useful with the `done` parameter.
+
+
 # Accepted Datasets
 The Accepted Datasets section is optional.
 

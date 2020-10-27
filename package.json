@@ -1,0 +1,29 @@
+{
+  "name": "erddap-lint",
+  "version": "1.0.0",
+  "description": "Run mocha tests against ERDDAP metadata",
+  "main": "runtests.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/IrishMarineInstitute/erddap-lint.git"
+  },
+  "scripts": {
+    "test": "mocha runtests.js --reporter mochawesome"
+  },
+  "keywords": [
+    "ERDDAP"
+  ],
+  "author": "Irish Marine Institute",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/IrishMarineInstitute/erddap-lint/issues"
+  },
+  "homepage": "https://github.com/IrishMarineInstitute/erddap-lint#readme",
+  "devDependencies": {
+    "chai": "^4.2.0",
+    "fetch": "^1.1.0",
+    "mocha": "^8.2.0",
+    "mochawesome": "^6.1.1",
+    "node-fetch": "^2.6.1"
+  }
+}

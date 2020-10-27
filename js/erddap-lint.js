@@ -1,7 +1,7 @@
 (function(global, factory) {
     typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
         typeof define === 'function' && define.amd ? define(factory) :
-        [global.ErddapLint] = factory();
+        global.ErddapLint = factory();
 }(this, (function() {
     'use strict';
     const $args = function(func) {
@@ -258,7 +258,7 @@
         utdone(true)();
         return results.reduce((accepted, accepts) => accepted && accepts, true);
     }
-    const fetcher = new JSONPfetcher();
+    const fetcher = (typeof window === 'undefined') ? { fetch: (x)=>fetch(x).then(r=>r.json())} : new JSONPfetcher();
     const ErddapLint = function() {
         this.context = {
             log: (x) => console.log(x)
@@ -272,8 +272,13 @@
         return Promise.all(urls.map(
             url => fetch(url)
             .then(r => r.text())
-            .then(markdown => new RuleSet(url, markdown, this.context))
-            .then(ruleSet => this.ruleSets.push(ruleSet)))).then(() => this)
+            .then(markdown => this.addRuleSetFromMarkdown(url,markdown))));
+    }
+
+    ErddapLint.prototype.addRuleSetFromMarkdown = function(url, markdown) {
+        let ruleSet = new RuleSet(url, markdown, this.context);
+        this.ruleSets.push(ruleSet);
+        return this;
     }
 
     ErddapLint.prototype.getRuleSets = function(dataset, context) {
@@ -405,5 +410,5 @@
         });
 
     }
-    return [ErddapLint];
+    return ErddapLint;
 })));

@@ -167,7 +167,7 @@ where {
 ```
 
 # Dataset titles should not contain acronyms
-Any dataset title containing a word more than two letters long in full uppercase should fail, unless the dataset id is listed below.
+Any dataset title containing a word more than one letter long in full uppercase should fail, unless the dataset id is listed below.
 
 Dataset ids to ignore for this rule:
 

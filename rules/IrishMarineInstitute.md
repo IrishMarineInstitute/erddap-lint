@@ -172,3 +172,19 @@ Any dataset title containing a word more than two letters long in full uppercase
 Dataset ids to ignore for this rule:
 
     - IMI_EATL_WAVE
+
+```javascript
+(NC_GLOBALS)=>{
+    let title = NC_GLOBALS.attributes.title.value;
+    let words = title.split(/\s+/);
+    let uppercase = words.filter(word=>word.length>1 && word === word.toUpperCase());
+    if(uppercase.length>0){
+        let message = "an uppercase word";
+        if(uppercase.length>1){
+            message = "uppercase words";
+        }
+        chai.assert.fail(`Title "${title}" contains ${message}: ${uppercase}`)
+    }
+    return true;
+}
+```

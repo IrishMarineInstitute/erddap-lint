@@ -130,10 +130,14 @@
         let lines = markdown.split("\n")
         this.title = lines[0].replace('#', '').trim();
         this.timeout = false;
+        this.ignore_dataset_ids = [];
         let re_timeout = /^\s*timeout:\s*(\d+)\s*$/i;
+        let re_inignore = /Dataset ids to ignore for this rule/i;
+        let re_listitem = /^\s+[-\*]\s*(\S+)\s*$/;
         let docs = [],
             code = [],
-            incode = false;
+            incode = false,
+            inignore = false;
         for (let i = 1; i < lines.length; i++) {
             let line = lines[i];
             if (line.match(REGEX_CODEFENCE)) {
@@ -156,6 +160,20 @@
                     this.timeout = parseInt(line.match(re_timeout)[1]);
                     console.log("timeout",this.timeout);
                 }
+                if(line.match(re_inignore)){
+                    inignore = true;
+                    continue;
+                }
+                if(inignore){
+                    if(this.ignore_dataset_ids.length === 0 && line.match(/^\s*$/)){
+                        continue;
+                    }
+                    if(!line.match(re_listitem)){
+                        inignore = false;
+                        continue;
+                    }
+                    this.ignore_dataset_ids.push(line.match(re_listitem)[1]);
+                }
             }
         }
         this.docs = docs.join("\n");
@@ -174,6 +192,12 @@
     }
 
     Rule.prototype.accepts = function(context, dataset, mochaDone) {
+        if(this.ignore_dataset_ids.indexOf(dataset.id)>=0){//ignore this dataset for this test.
+            if(mochaDone){
+                mochaDone();
+            }
+            return true;
+        }
         let promises = [];
         let utdone = function(lastOne){
             if(!mochaDone) return undefined;
@@ -290,8 +314,10 @@
         this.ruleSets.filter(ruleSet => ruleSet.accepts(context, dataset)).map(ruleSet => ruleSet.apply(context, dataset));
     }
     ErddapLint.prototype.fetchDataset = function(datasetUrl) {
+        let dsid = datasetUrl.replace(/\/[^\/]*$/,"").split("/").pop();
         let promise = fetch(datasetUrl).then(x => x.json()).then(x => x.table.rows).then(rows => {
             let dataset = {
+                id: dsid,
                 url: datasetUrl,
                 NC_GLOBALS: {
                     name: "NC_GLOBAL",

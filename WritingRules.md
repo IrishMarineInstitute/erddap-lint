@@ -9,6 +9,24 @@ written yet.
 In fact this file is a valid rule set, so you could copy it to the rules folder, change the title
 at the top and you're good to go.
 
+## Timeout
+For slow operations, especially those which have a `done` parameter, specify a timeout, in seconds.
+
+Timeout: 5
+
+## Ignoring some datasets
+
+To have the rule ignore some datasets, include some markdown like below, with the list of
+dataset ids to be ignored.
+
+Dataset ids to ignore for this rule:
+
+    - IMI_EATL_WAVE
+    - some_other_dataset_id
+
+
+# Implementing rules in code
+
 A rule in the rules file is comprised of a level 1 heading with some textual description and a fenced
 javascript block containing a single filter type function. In practice the textual dexcription and
 fenced javascript block may be written by different people.
@@ -34,19 +52,14 @@ parameter.
 
 (We will provide an editor that can be used to develop a rule set).
 
-# done Parameter
+## done Parameter
 
 For things that take time, a function may contain a second parameter, `done` which is a callback.
 In this case the return parameter of the function is ignored, and the `done()` function must be invoked
 at the end of processing. Include a reason parameter when calling `done()`, if the test result was negative.
 
 
-# Timeout
-For slow operations, especially those which have a `done` parameter, specify a timeout, in seconds.
-
-Timeout: 5
-
-# The memo
+## The memo
 
 Your function has access to a `memo` object, which is a dictionary shared between calls. This can be useful
 for storing promises (eg fetch requests), so that the result can be used by all runs of the test rather than
@@ -64,7 +77,6 @@ Here's a simple filter which accepts only datasets from Irish Marine Institute:
 ```javascript
 (dataset)=>dataset.url.indexOf("marine.ie/")>=0;
 ```
-
 
 # Example Lowercase Rule
 All variable and dimension names to be lower case

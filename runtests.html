@@ -8,7 +8,8 @@
       <script src="js/erddap-lint.js"></script>
   </head>
   <body>
-    <div id="mocha"></div>
+    
+    <div id="mocha"><h1 id="title"></h1></div>
 
     <script src="https://unpkg.com/chai/chai.js"></script>
     <script src="https://unpkg.com/mocha/mocha.js"></script>
@@ -17,8 +18,16 @@
       mocha.setup('bdd');
       //mocha.growl(); // <-- Enables web notifications
       mocha._reporter.prototype.testURL = function(test){return `#${window.location.hash.substring(1)}`};
+      mocha._reporter.prototype.suiteURL = function(suite){
+        let link = suite.link || `#${window.location.hash.substring(1)}`;
+        return `?${new Date().getTime()}${link}`;
+      };
     </script>
 <script>
+    let setTitle = function(erddap){
+      erddap = erddap.replace(/\/info\/.*$/,"");
+      document.getElementById("title").innerHTML = `<a href="?${new Date().getTime()}#erddap=${erddap}">${erddap}</a>`;
+    }
     let params = window.location.hash.substring(1).split('&').reduce((h,hk) => { 
       let t = hk.split('='); 
         h[t[0]] = t[1];
@@ -39,6 +48,7 @@
     }
 
     if(params.dataset){
+      setTitle(params.dataset);
       getErddapLint().then(lint=>{
         lint.prepareMochaTestsForDataset(params.dataset)
           .then(e=>{
@@ -46,6 +56,7 @@
           })
         });
     }else if(params.erddap){
+      setTitle(params.erddap);
       getErddapLint().then(lint=>{
               lint.prepareMochaTestsForErddap(params.erddap)
                 .then(e=>{
@@ -54,7 +65,8 @@
               });
     }else{
       //redirect to index.
-        runTests(["https://erddap.marine.ie/erddap/info/ais_met_hydro/index.json"]);
+        let index = new URL("index.html",document.baseURI).href
+        window.location.href = index;
     }
 
 </script>

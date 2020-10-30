@@ -65,6 +65,8 @@
     const REGEX_CODEFENCE = /\`\`\`/;
     const RuleSet = function(reference, markdown, context) {
         this.reference = reference; // eg. url to markdown page
+        this.filename = reference.split('/').reverse()[0];
+        this.name = this.filename.split('.')[0];
         this.acceptedDatasets = new Rule("builtin", 0, "# Accepted Datasets\n```\n(dataset)=>true\n```");
         let line_no = 0;
         let rules = markdown.split(/^\s*(?=#[^#]+)/m).map(m => {
@@ -158,7 +160,6 @@
                 docs.push(line);
                 if(line.match(re_timeout)){
                     this.timeout = parseInt(line.match(re_timeout)[1]);
-                    console.log("timeout",this.timeout);
                 }
                 if(line.match(re_inignore)){
                     inignore = true;
@@ -292,15 +293,15 @@
     const memo = {
         foo: "bar"
     };
-    ErddapLint.prototype.fetchRules = function(urls) {
+    ErddapLint.prototype.fetchRules = function(urls,ruleTitlePattern) {
         return Promise.all(urls.map(
             url => fetch(url)
             .then(r => r.text())
-            .then(markdown => this.addRuleSetFromMarkdown(url,markdown))));
+            .then(markdown => this.addRuleSetFromMarkdown(url,markdown,ruleTitlePattern))));
     }
 
-    ErddapLint.prototype.addRuleSetFromMarkdown = function(url, markdown) {
-        let ruleSet = new RuleSet(url, markdown, this.context);
+    ErddapLint.prototype.addRuleSetFromMarkdown = function(url, markdown, ruleTitlePattern) {
+        let ruleSet = new RuleSet(url, markdown, this.context, ruleTitlePattern);
         this.ruleSets.push(ruleSet);
         return this;
     }
@@ -313,6 +314,7 @@
         context = context || this.context;
         this.ruleSets.filter(ruleSet => ruleSet.accepts(context, dataset)).map(ruleSet => ruleSet.apply(context, dataset));
     }
+
     ErddapLint.prototype.fetchDataset = function(datasetUrl) {
         let dsid = datasetUrl.replace(/\/[^\/]*$/,"").split("/").pop();
         let promise = fetch(datasetUrl).then(x => x.json()).then(x => x.table.rows).then(rows => {
@@ -370,12 +372,15 @@
         return promise;
     }
 
-    ErddapLint.prototype.prepareMochaTestsForDataset = function(datasetUrl) {
+    ErddapLint.prototype.prepareMochaTestsForDataset = function(datasetUrl,hash) {
+        hash = hash || `#erddap=${datasetUrl.replace(/\/info\/.*$/,'')}`;
         return this.fetchDataset(datasetUrl).then(dataset => {
             let ruleSets = this.getRuleSets(dataset);
             ruleSets.forEach(ruleSet => {
-                describe(datasetUrl, function() {
+                describe(dataset.NC_GLOBALS.attributes.title.value, function() {
+                    this.link=`#dataset=${datasetUrl}`;
                     describe(ruleSet.title, function() {
+                        this.link=`${hash}&rules=${ruleSet.name}`;
                         ruleSet.rules.map(rule => {
                             let messages = [];
                             let context = {
@@ -423,7 +428,7 @@
                     let url = urls.shift();
                     if (url) {
                         statuscb && setTimeout(()=>statuscb(`fetching ${url}`),0)
-                        this.prepareMochaTestsForDataset(url).then(_ => {
+                        this.prepareMochaTestsForDataset(url,`#erddap=${erddap}`).then(_ => {
                             prepareNextUrl();
                         });
                     } else {

@@ -4,4 +4,7 @@ if [ "$#" -ne 1 ]; then
   exit 1
 fi
 
-erddap=$1 npm run test
+report=$(echo "$1" | sed -e 's#^htt[^/]*//##' -e 's#/.*$##g' -e 's/\W/./g')
+echo report $report
+
+erddap=$1 MOCHAWESOME_REPORTFILENAME=$report.html MOCHAWESOME_REPORTTITLE=$report npm run test

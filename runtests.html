@@ -9,7 +9,9 @@
   </head>
   <body>
     
-    <div id="mocha"><h1 id="title"></h1></div>
+    <div id="mocha">
+      <h1><a href="index.html">ERDDAP-lint tool</a></h1>
+      <small><small><pre id="status"></pre></small></small><h1 id="title"></h1></div>
 
     <script src="https://unpkg.com/chai/chai.js"></script>
     <script src="https://unpkg.com/mocha/mocha.js"></script>
@@ -46,21 +48,24 @@
         return lint.fetchRules(ruleUrls).then(_=>lint);
       });
     }
-
+    let statusel = document.getElementById("status");
+    let statuscb = function(status){
+      statusel.innerText = status?"Testing...\n"+status:"";
+    };
     if(params.dataset){
       setTitle(params.dataset);
       getErddapLint().then(lint=>{
-        lint.prepareMochaTestsForDataset(params.dataset)
+        lint.prepareMochaTestsForDataset(params.dataset, undefined, statuscb)
           .then(e=>{
-            mocha.run();
+            mocha.run(()=>statusel.innerText = "");
           })
         });
     }else if(params.erddap){
       setTitle(params.erddap);
       getErddapLint().then(lint=>{
-              lint.prepareMochaTestsForErddap(params.erddap)
+              lint.prepareMochaTestsForErddap(params.erddap, statuscb)
                 .then(e=>{
-                  mocha.run();
+                  mocha.run(()=>statusel.innerText = "");
                 })
               });
     }else{

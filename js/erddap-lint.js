@@ -372,22 +372,27 @@
         return promise;
     }
 
-    ErddapLint.prototype.prepareMochaTestsForDataset = function(datasetUrl,hash) {
+    ErddapLint.prototype.prepareMochaTestsForDataset = function(datasetUrl,hash, statuscb) {
         hash = hash || `#erddap=${datasetUrl.replace(/\/info\/.*$/,'')}`;
+        statuscb = statuscb || function(){};
         return this.fetchDataset(datasetUrl).then(dataset => {
             let ruleSets = this.getRuleSets(dataset);
             ruleSets.forEach(ruleSet => {
-                describe(dataset.NC_GLOBALS.attributes.title.value, function() {
+                let datasetTitle = dataset.NC_GLOBALS.attributes.title.value;
+                describe(datasetTitle, function() {
                     this.link=`#dataset=${datasetUrl}`;
                     describe(ruleSet.title, function() {
                         this.link=`${hash}&rules=${ruleSet.name}`;
                         ruleSet.rules.map(rule => {
                             let messages = [];
                             let context = {
-                                log: (text) => messages.push(text)
+                                log: (text) => {
+                                    messages.push(text);
+                                }
                             }
                             if (rule.codeRule.args.length == 2) {
                                 it(rule.title, function(done) {
+                                    statuscb(`${datasetTitle}\n${ruleSet.title}\n${rule.title}`);
                                     this.test.body = `# ${rule.title}\n\n${rule.docs}\n\n\`\`\`\n${rule.code}\n\`\`\`\n`;
                                     if(rule.timeout){
                                         this.timeout(rule.timeout);
@@ -396,6 +401,7 @@
                                 });
                             } else {
                                 it(rule.title, function() {
+                                    statuscb(`${datasetTitle}\n${ruleSet.title}\n${rule.title}`);
                                     this.test.body = `# ${rule.title}\n\n${rule.docs}\n\n\`\`\`\n${rule.code}\n\`\`\`\n`;
                                     if (rule.accepts(context, dataset)) {
                                         chai.assert(true);
@@ -428,7 +434,7 @@
                     let url = urls.shift();
                     if (url) {
                         statuscb && setTimeout(()=>statuscb(`fetching ${url}`),0)
-                        this.prepareMochaTestsForDataset(url,`#erddap=${erddap}`).then(_ => {
+                        this.prepareMochaTestsForDataset(url,`#erddap=${erddap}`, statuscb).then(_ => {
                             prepareNextUrl();
                         });
                     } else {

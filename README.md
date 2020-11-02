@@ -1,5 +1,5 @@
 # erddap-lint
-A lint tool for Erddap dataset configurations.
+A lint tool for Erddap dataset configurations. [Demo](https://irishmarineinstitute.github.io/erddap-lint/)
 
 This project contains rules and a simple static web application for running some verification tests against your ERDDAP server. All the tests are run in the web browser.
 

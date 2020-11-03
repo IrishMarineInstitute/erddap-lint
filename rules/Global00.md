@@ -15,7 +15,7 @@ These NC_GLOBAL attributes belong to all datasets:
     let must = ["creator_name","creator_email","creator_type","creator_url"];
     must.forEach(v=>{
         if(! (NC_GLOBALS.attributes[v] && NC_GLOBALS.attributes[v].value)){
-            missing.push(v);
+            missing.push(`NC_GLOBAL.${v}`);
         }
     });
     if(missing.length === 0){
@@ -25,3 +25,4 @@ These NC_GLOBAL attributes belong to all datasets:
 
 }
 ```
+

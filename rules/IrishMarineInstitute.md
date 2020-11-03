@@ -176,7 +176,7 @@ Dataset ids to ignore for this rule:
 ```javascript
 (NC_GLOBALS)=>{
     let title = NC_GLOBALS.attributes.title.value;
-    let words = title.replace(/[^\w\s]/g,"").replace(/[\d]/g,"").split(/\s+/);
+    let words = title.replace(/[^\w\s]/g,"").replace(/\b\d+\b/g,"").split(/\s+/);
     let uppercase = words.filter(word=>word.length>1 && word === word.toUpperCase());
     if(uppercase.length>0){
         let message = "an uppercase word";

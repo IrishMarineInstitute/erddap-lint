@@ -377,10 +377,10 @@
         statuscb = statuscb || function(){};
         return this.fetchDataset(datasetUrl).then(dataset => {
             let ruleSets = this.getRuleSets(dataset);
-            ruleSets.forEach(ruleSet => {
                 let datasetTitle = dataset.NC_GLOBALS.attributes.title.value;
                 describe(datasetTitle, function() {
                     this.link=`#dataset=${datasetUrl}`;
+            ruleSets.forEach(ruleSet => {
                     describe(ruleSet.title, function() {
                         this.link=`${hash}&rules=${ruleSet.name}`;
                         ruleSet.rules.map(rule => {
@@ -428,7 +428,7 @@
         statuscb && setTimeout(()=>statuscb('searching for datasets'),0)
         return fetcher.fetch(searchURL).then(data => {
             let infocol = data.table.columnNames.indexOf("Info");
-            let urls = data.table.rows.map(x => x[infocol]);
+            let urls = data.table.rows.map(x => x[infocol]).filter(x=>x.indexOf('/allDatasets/')<0);
             return new Promise((resolve, reject) => {
                 let prepareNextUrl = () => {
                     let url = urls.shift();

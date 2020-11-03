@@ -14,7 +14,7 @@ The infoUrl must link to a catalogue record at data.marine.ie
 
 ```javascript
 (NC_GLOBALS)=>{
-    if(NC_GLOBALS.infoUrl && NC_GLOBALS.infoUrl.value.indexOf('data.marine.ie')>=0){
+    if(NC_GLOBALS.attributes.infoUrl && NC_GLOBALS.attributes.infoUrl.value.indexOf('data.marine.ie')>=0){
         return true;
     }
     chai.assert.fail(`NC_GLOBAL.infoUrl does not link to a catalogue record at data.marine.ie`)
@@ -176,14 +176,14 @@ Dataset ids to ignore for this rule:
 ```javascript
 (NC_GLOBALS)=>{
     let title = NC_GLOBALS.attributes.title.value;
-    let words = title.split(/\s+/);
+    let words = title.replace(/[^\w\s]/g,"").replace(/[\d]/g,"").split(/\s+/);
     let uppercase = words.filter(word=>word.length>1 && word === word.toUpperCase());
     if(uppercase.length>0){
         let message = "an uppercase word";
         if(uppercase.length>1){
             message = "uppercase words";
         }
-        chai.assert.fail(`Title "${title}" contains ${message}: ${uppercase}`)
+        chai.assert.fail(`Title "${title}" contains ${message}: ${uppercase.join(", ")}`)
     }
     return true;
 }

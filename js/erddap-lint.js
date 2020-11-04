@@ -379,6 +379,7 @@
             let ruleSets = this.getRuleSets(dataset);
                 let datasetTitle = dataset.NC_GLOBALS.attributes.title.value;
                 describe(datasetTitle, function() {
+                    this.dataset_metadata_url = datasetUrl.replace(/\.json$/, ".html");
                     this.link=`#dataset=${datasetUrl}`;
             ruleSets.forEach(ruleSet => {
                     describe(ruleSet.title, function() {
@@ -423,8 +424,9 @@
         });
     }
 
-    ErddapLint.prototype.prepareMochaTestsForErddap = function(erddap,statuscb) {
-        let searchURL = erddap + "/search/index.json?page=1&itemsPerPage=1000&searchFor=latitude";
+    ErddapLint.prototype.prepareMochaTestsForErddap = function(erddap,searchFor,statuscb) {
+        searchFor = searchFor || "latitude";
+        let searchURL = erddap + `/search/index.json?page=1&itemsPerPage=1000&searchFor=${searchFor}`;
         statuscb && setTimeout(()=>statuscb('searching for datasets'),0)
         return fetcher.fetch(searchURL).then(data => {
             let infocol = data.table.columnNames.indexOf("Info");

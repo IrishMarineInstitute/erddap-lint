@@ -56,7 +56,7 @@
         let ds = url.replace(/^.*\/info\//,"").replace(/\/.*$/,"");
         link = `${link}&searchFor=${ds}`;
       }
-      document.getElementById("index_link").href=`/${link}`
+      document.getElementById("index_link").href=`index.html${link}`
     }
     let setSubTitle = function(dataset){
       dataset = dataset.replace(/\.json$/,".html");

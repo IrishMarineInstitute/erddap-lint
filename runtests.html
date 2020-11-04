@@ -51,7 +51,7 @@
       erddap = url.replace(/\/info\/.*$/,"");
       let link = appendSearchFor(`#erddap=${erddap}`);
       document.getElementById("title").innerHTML = `<a href="?${new Date().getTime()}${link}">${erddap}</a>`;
-      if(link.indexOf("searchFor=")<0 && link !== url){
+      if(link.indexOf("searchFor=")<0 && url.indexOf("/info/")>0){
         // get the dataset name from url
         let ds = url.replace(/^.*\/info\//,"").replace(/\/.*$/,"");
         link = `${link}&searchFor=${ds}`;

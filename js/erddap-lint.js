@@ -368,7 +368,7 @@
                 }
             });
             return dataset;
-        });
+        }).catch(e=>undefined);
         return promise;
     }
 
@@ -376,6 +376,9 @@
         hash = hash || `#erddap=${datasetUrl.replace(/\/info\/.*$/,'')}`;
         statuscb = statuscb || function(){};
         return this.fetchDataset(datasetUrl).then(dataset => {
+            if(!dataset){
+                return false;
+            }
             let ruleSets = this.getRuleSets(dataset);
                 let datasetTitle = dataset.NC_GLOBALS.attributes.title.value;
                 describe(datasetTitle, function() {
@@ -425,6 +428,7 @@
     }
 
     ErddapLint.prototype.prepareMochaTestsForErddap = function(erddap,searchFor,statuscb) {
+        erddap = erddap.replace(/[\/]+$/,"");
         searchFor = searchFor || "latitude";
         let searchURL = erddap + `/search/index.json?page=1&itemsPerPage=1000&searchFor=${searchFor}`;
         statuscb && setTimeout(()=>statuscb('searching for datasets'),0)
@@ -446,7 +450,7 @@
                 }
                 prepareNextUrl();
             })
-        });
+        }).catch(e=>{statuscb && setTimeout(()=>statuscb("No datasets found."),0)});
 
     }
     return ErddapLint;

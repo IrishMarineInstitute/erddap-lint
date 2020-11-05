@@ -8,6 +8,9 @@
   <meta name="viewport" content=
   "width=device-width, initial-scale=1">
   <link rel="stylesheet" href="css/tachyons.min.css">
+    <link rel="stylesheet" href="css/autoComplete.min.css" />
+    <link rel="stylesheet" href="css/style.css" />
+    <script src="js/autoComplete.min.js"></script>
   <script src="js/erddap-lint.js"></script>
 </head>
 <body class="w-100 sans-serif">
@@ -43,10 +46,11 @@
       </article>
     <article class="pb4" id="about">
       <div class="nowrap mw7 center">
+        <input style="display: block; visibility: hidden" id="autoComplete" value="">
         <div class="measure">
           <label for="erddap-url" class="f6 b db mb2">ERDDAP URL</label>
           <input id="erddap-url" class="input-reset ba b--black-20 pa2 mb2 db w-100" type="text"
-          aria-describedby="erddap-url-desc" value="https://erddap.marine.ie/erddap">
+          aria-describedby="erddap-url-desc" value="https://erddap.marine.ie/erddap"> 
           <small id="erddap-url-desc" class="f6 black-60 db mb2">URL to ERDDAP.</small>
         </div>
         <div class="measure">
@@ -90,6 +94,54 @@
     let searchFor = document.getElementById("searchFor").value;
     window.location.href = `runtests.html#erddap=${erddapURL}&searchFor=${searchFor}`;
   });  
+</script>
+<script src="https://irishmarineinstitute.github.io/awesome-erddap/erddaps.js"></script>
+<script>
+  if(typeof(awesomeErddaps) !== "undefined"){
+  // awesome erddap list
+  document.getElementById("autoComplete").style.visibility = "visible";
+  let placeholder = "Type to find an ERDDAP server";
+  // The autoComplete.js Engine instance creator
+  const autoCompletejs = new autoComplete({
+    data: {
+      src: awesomeErddaps,
+      key: ["name","shortName", "url"],
+    },
+    trigger: {
+      event: ["input", "focusin", "focusout"]
+    },
+    placeHolder: placeholder,
+    searchEngine: "loose",
+    highlight: false,
+    maxResults: 5,
+    resultsList: {
+      render: true
+    },
+    noResults: function() {
+      const result = document.createElement("li");
+      result.setAttribute("class", "no_result");
+      result.setAttribute("tabindex", "1");
+      result.innerHTML = "No Results";
+      document.querySelector("#autoComplete_list").appendChild(result);
+    },
+    onSelection: function(feedback) {
+      document.querySelector("#autoComplete").blur();
+      const selection = feedback.selection.value.url;
+      // Render selected choice to selection div
+      let el = document.getElementById("erddap-url")
+      el.value = selection;
+      el.classList.add("shadow");
+      setTimeout(()=>el.classList.remove("shadow"),1000)
+      // Clear Input
+      document.querySelector("#autoComplete").value = "";
+      // Change placeholder with the selected value
+      document.querySelector("#autoComplete").setAttribute("placeholder", placeholder);
+      // Concole log autoComplete data feedback
+      //console.log(feedback);
+    },
+  });
+
+  }
 </script>
 </body>
 </html>

@@ -430,7 +430,7 @@
     ErddapLint.prototype.prepareMochaTestsForErddap = function(erddap,searchFor,statuscb) {
         erddap = erddap.replace(/[\/]+$/,"");
         searchFor = searchFor || "latitude";
-        let searchURL = erddap + `/search/index.json?page=1&itemsPerPage=1000&searchFor=${searchFor}`;
+        let searchURL = erddap + `/search/index.json?page=1&itemsPerPage=50&searchFor=${searchFor}`;
         statuscb && setTimeout(()=>statuscb('searching for datasets'),0)
         return fetcher.fetch(searchURL).then(data => {
             let infocol = data.table.columnNames.indexOf("Info");
